@@ -4,6 +4,7 @@ import { AuthGuard } from './gaurds/auth.gaurd';
 import { Roles } from './decorator/roles.decorator';
 import { RolesGuard } from './gaurds/roles.gaurd';
 import { Role } from '@prisma/client';
+import { SignInDto, SignUpDto, RefreshTokenDto } from './dto/auth.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -12,20 +13,20 @@ export class AuthController {
     @Post('sign-up')
     @UseGuards(AuthGuard, RolesGuard)
     @Roles(Role.Admin)
-    async signUp(@Body() dto: any) {
+    async signUp(@Body() dto: SignUpDto) {
         return await this.authService.signUp(dto);
     }
 
     @Post('sign-in')
     @HttpCode(HttpStatus.OK)
-    async signIn(@Body() dto: any) {
+    async signIn(@Body() dto: SignInDto) {
         return await this.authService.signIn(dto);
     }
 
 
     @Post('refresh')
     @HttpCode(HttpStatus.OK)
-    async refresh(@Body() dto: { userId: number, refreshToken: string }) {
+    async refresh(@Body() dto: RefreshTokenDto) {
         return await this.authService.refreshTokens(dto.userId, dto.refreshToken);
     }
 }

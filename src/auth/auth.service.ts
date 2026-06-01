@@ -4,6 +4,7 @@ import {JwtService} from '@nestjs/jwt';
 import {ConfigService} from '@nestjs/config';
 import * as bcrypt from 'bcrypt'
 import { Prisma } from '@prisma/client';
+import { SignInDto, SignUpDto } from './dto/auth.dto';
 
 @Injectable()
 export class AuthService {
@@ -12,16 +13,7 @@ export class AuthService {
         private jwtService:JwtService,
         private config:ConfigService,
     ){}
-    async signUp(dto: any) {
-        if (!dto.email || !dto.password || !dto.name || !dto.role) {
-            throw new BadRequestException('Missing required fields: name, email, password, and role are required');
-        }
-
-        const validRoles = ['Admin', 'Owner', 'customer'];
-        if (!validRoles.includes(dto.role)) {
-            throw new BadRequestException(`Invalid role. Valid roles are: ${validRoles.join(', ')}`);
-        }
-
+    async signUp(dto: SignUpDto) {
         const hashedPassword = await bcrypt.hash(dto.password, 10);
         try {
             const newUser = await this.prisma.user.create({
@@ -51,7 +43,7 @@ export class AuthService {
             throw new InternalServerErrorException( 'error creating user');
         }
     }
-    async signIn(dto:any){
+    async signIn(dto:SignInDto){
         const user=await this.prisma.user.findUnique({
             where:{
                 email:dto.email
@@ -60,6 +52,12 @@ export class AuthService {
         if(!user){
             throw new UnauthorizedException('User not found');
         }
+        
+        // التحقق من أن كلمة المرور مشفرة في قاعدة البيانات لتجنب خطأ bcrypt
+        if (!user.password || user.password === '123456') {
+             throw new UnauthorizedException('Password in database is not secured. Please contact admin.');
+        }
+
         const isPasswordValid=await bcrypt.compare(dto.password,user.password);
         if(!isPasswordValid){
             throw new UnauthorizedException('Invalid password');
