@@ -11,9 +11,6 @@ export async function adminSeed(prisma: PrismaService) {
           email: adminEmail,
         },
     });
-
-    
-
     if (!adminExist) {
         return await prisma.user.create({
         data: {
